@@ -8,3 +8,4 @@ transformers==4.30.2
 # For model optimization
 onnxruntime==1.15.1
 numpy==1.24.3
+bcrypt==3.2.2
