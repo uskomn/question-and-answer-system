@@ -1,8 +1,12 @@
 from flask import Blueprint,jsonify,request
+from flask_jwt_extended import jwt_required
+from backend.app.core.security import login_required
 
 info_bp=Blueprint('info',__name__)
 
-@info_bp.route('/api/model/info', methods=['GET'])
+@info_bp.route('/model/info', methods=['GET'])
+@login_required
+@jwt_required()
 def model_info():
     """Get model information"""
     return jsonify({

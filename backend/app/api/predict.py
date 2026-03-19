@@ -1,8 +1,12 @@
 from flask import Blueprint,request,jsonify
+from backend.app.core.security import login_required
+from flask_jwt_extended import jwt_required
 
 predict_bp=Blueprint('predict',__name__)
 
-@predict_bp.route('/api/predict', methods=['POST'])
+@predict_bp.route('/predict', methods=['POST'])
+@login_required
+@jwt_required()
 def predict():
     try:
         return jsonify({
@@ -19,7 +23,9 @@ def predict():
         return jsonify({"error": f"Prediction error: {str(e)}"}), 500
 
 
-@predict_bp.route('/api/batch-predict', methods=['POST'])
+@predict_bp.route('/batch-predict', methods=['POST'])
+@login_required
+@jwt_required()
 def batch_predict():
     try:
         return jsonify({

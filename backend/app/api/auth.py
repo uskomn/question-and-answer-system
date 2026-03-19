@@ -39,6 +39,7 @@ def register():
 @auth_bp.route('/login', methods=["POST"])
 def login():
     data=request.get_json()
+    print(data)
     if not data:
         return jsonify({"message":"no valid request"}),400
     username=data.get("username")
@@ -51,7 +52,7 @@ def login():
     if not verify_password(password,user.password_hash):
         return jsonify({"message":"wrong password"}),400
 
-    access_token=create_access_token({"sub": user.id})
+    access_token=create_access_token({"sub": str(user.id)})
 
     return jsonify({
         "access_token":access_token,

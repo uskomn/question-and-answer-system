@@ -27,12 +27,12 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="username">Username</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="Enter your email"
+            id="username"
+            v-model="username"
+            type="text"
+            placeholder="Enter your username"
             required
             :disabled="isLoading"
           />
@@ -82,7 +82,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // Form data
-const email = ref('')
+const username = ref('')
 const password = ref('')
 
 // Computed
@@ -94,7 +94,7 @@ async function handleLogin() {
   error.value = ''
   
   try {
-    await authStore.login(email.value, password.value)
+    await authStore.login(username.value, password.value)
     
     // Redirect to the intended page or chat
     const redirectPath = route.query.redirect || '/'

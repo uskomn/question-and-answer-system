@@ -44,7 +44,7 @@
             placeholder="Choose a username"
             required
             :disabled="isLoading"
-            minlength="3"
+            minlength="1"
           />
         </div>
 
@@ -69,7 +69,7 @@
             placeholder="Create a password"
             required
             :disabled="isLoading"
-            minlength="6"
+            minlength="3"
           />
         </div>
 
@@ -82,7 +82,7 @@
             placeholder="Confirm your password"
             required
             :disabled="isLoading"
-            minlength="6"
+            minlength="3"
           />
         </div>
 
@@ -142,13 +142,13 @@ async function handleRegister() {
   }
 
   // Validate password length
-  if (password.value.length < 6) {
+  if (password.value.length < 3) {
     error.value = 'Password must be at least 6 characters'
     return
   }
 
   // Validate username length
-  if (username.value.length < 3) {
+  if (username.value.length < 1) {
     error.value = 'Username must be at least 3 characters'
     return
   }

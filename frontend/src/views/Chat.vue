@@ -103,16 +103,6 @@
               ref="questionInput"
             ></textarea>
           </div>
-          <div class="input-row">
-            <textarea
-              v-model="context"
-              placeholder="Enter context text for the model to analyze..."
-              @keydown.enter.exact.prevent="handleSend"
-              :disabled="chatStore.isLoading || !chatStore.isModelReady"
-              rows="3"
-              ref="contextInput"
-            ></textarea>
-          </div>
           <div class="input-actions">
             <button 
               class="btn btn-secondary" 

@@ -1,44 +1,42 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
-
-// Create axios instance
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
+import chatApi from '../api/chat'
 
 export const useChatStore = defineStore('chat', () => {
-  // State
+
+  // ================= State =================
+
   const messages = ref([])
   const isLoading = ref(false)
   const isModelReady = ref(false)
   const modelInfo = ref(null)
   const error = ref(null)
+
   const lastMetrics = ref({
     inferenceTime: 0,
     confidence: 0
   })
 
-  // Getters
+  // ================= Getters =================
+
   const hasMessages = computed(() => messages.value.length > 0)
-  
-  const userMessages = computed(() => 
+
+  const userMessages = computed(() =>
     messages.value.filter(m => m.role === 'user')
   )
-  
-  const botMessages = computed(() => 
+
+  const botMessages = computed(() =>
     messages.value.filter(m => m.role === 'bot')
   )
 
-  // Actions
+  // ================= Actions =================
+
+  // 检查后端健康状态
   async function checkHealth() {
     try {
-      const response = await api.get('/health')
-      isModelReady.value = response.data.status === 'ready'
+      const response = await chatApi.health()
+      isModelReady.value = response.status === 'ready'
+      console.log("isModelReady",isModelReady)
       return isModelReady.value
     } catch (err) {
       console.error('Health check failed:', err)
@@ -48,117 +46,141 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 获取模型信息
   async function fetchModelInfo() {
+
     try {
-      const response = await api.get('/model/info')
-      modelInfo.value = response.data
-      return response.data
+
+      const res = await chatApi.modelInfo()
+
+      modelInfo.value = res.data
+
+      return res.data
+
     } catch (err) {
+
       console.error('Failed to fetch model info:', err)
+
       return null
     }
   }
 
+  // 发送问题
   async function sendMessage(question, context) {
+
     if (!question.trim() || !context.trim()) {
+
       error.value = 'Question and context are required'
+
       return null
     }
 
-    // Add user message
+    // 用户消息
     const userMsg = {
       id: Date.now(),
       role: 'user',
       content: question,
       timestamp: new Date().toISOString()
     }
+
     messages.value.push(userMsg)
 
-    // Add loading placeholder
+    // loading 占位消息
     const loadingId = Date.now() + 1
-    const loadingMsg = {
+
+    messages.value.push({
       id: loadingId,
       role: 'bot',
       content: '',
       isLoading: true,
       timestamp: new Date().toISOString()
-    }
-    messages.value.push(loadingMsg)
+    })
 
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await api.post('/predict', {
-        question: question,
-        context: context,
-        params: {
-          temperature: 0.7,
-          max_answer_len: 50
-        }
-      })
 
-      // Remove loading message
-      const loadingIndex = messages.value.findIndex(m => m.id === loadingId)
-      if (loadingIndex !== -1) {
-        messages.value.splice(loadingIndex, 1)
+      const res = await chatApi.predict(question, context)
+
+      // 删除 loading
+      const index = messages.value.findIndex(m => m.id === loadingId)
+
+      if (index !== -1) {
+        messages.value.splice(index, 1)
       }
 
-      // Add bot response
+      // 添加机器人回答
       const botMsg = {
         id: Date.now(),
         role: 'bot',
-        content: response.data.answer,
-        question: response.data.question,
-        metrics: response.data.metrics,
+        content: res.data.answer,
+        question: res.data.question,
+        metrics: res.data.metrics,
         timestamp: new Date().toISOString()
       }
+
       messages.value.push(botMsg)
 
-      // Update metrics
+      // 更新指标
       lastMetrics.value = {
-        inferenceTime: response.data.metrics.inference_time_ms,
-        confidence: response.data.metrics.confidence_score
+        inferenceTime: res.data.metrics?.inference_time_ms || 0,
+        confidence: res.data.metrics?.confidence_score || 0
       }
 
       return botMsg
+
     } catch (err) {
-      // Remove loading message
-      const loadingIndex = messages.value.findIndex(m => m.id === loadingId)
-      if (loadingIndex !== -1) {
-        messages.value.splice(loadingIndex, 1)
+
+      const index = messages.value.findIndex(m => m.id === loadingId)
+
+      if (index !== -1) {
+        messages.value.splice(index, 1)
       }
 
-      // Add error message
+      const msg =
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to get response'
+
       const errorMsg = {
         id: Date.now(),
         role: 'bot',
-        content: `Error: ${err.response?.data?.error || err.message || 'Failed to get response'}`,
+        content: `Error: ${msg}`,
         isError: true,
         timestamp: new Date().toISOString()
       }
+
       messages.value.push(errorMsg)
-      
-      error.value = errorMsg.content
+
+      error.value = msg
+
       return null
+
     } finally {
+
       isLoading.value = false
     }
   }
 
+  // 清空聊天记录
   function clearHistory() {
     messages.value = []
     error.value = null
   }
 
+  // 删除单条消息
   function removeMessage(id) {
+
     const index = messages.value.findIndex(m => m.id === id)
+
     if (index !== -1) {
       messages.value.splice(index, 1)
     }
   }
 
   return {
+
     // State
     messages,
     isLoading,
@@ -166,10 +188,12 @@ export const useChatStore = defineStore('chat', () => {
     modelInfo,
     error,
     lastMetrics,
+
     // Getters
     hasMessages,
     userMessages,
     botMessages,
+
     // Actions
     checkHealth,
     fetchModelInfo,
@@ -177,4 +201,5 @@ export const useChatStore = defineStore('chat', () => {
     clearHistory,
     removeMessage
   }
+
 })
