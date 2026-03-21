@@ -2,8 +2,8 @@ import torch
 from transformers import AutoModelForQuestionAnswering,AutoTokenizer
 
 
-MODEL_PATH = "E:\PycharmProjects\question and answer system\checkpoints\exp_D_logits_attn_kd"
-
+# MODEL_PATH = "E:\PycharmProjects\question and answer system\checkpoints\exp_D_logits_attn_kd"
+MODEL_PATH = "/home/ubuntu/question-and-answer-system/checkpoints/exp_D_logits_attn_kd"
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 model = AutoModelForQuestionAnswering.from_pretrained(MODEL_PATH)
 

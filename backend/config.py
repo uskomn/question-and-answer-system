@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
+# 服务器Mysql密码是aqzdwsfN2%
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "aeijcmejsiefmeiaeigr")
     SQLALCHEMY_DATABASE_URI = (
