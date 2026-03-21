@@ -49,7 +49,6 @@ import sys
 import tarfile
 import time
 from pathlib import Path
-from xml.etree.ElementTree import iterparse
 
 import faiss
 import numpy as np
@@ -97,8 +96,7 @@ def auto_batch_size(total_vram_gb: float, dim: int) -> int:
 # ──────────────────────────────────────────────────────────────────────────────
 # 2. XML 流式解析
 # ──────────────────────────────────────────────────────────────────────────────
-
-NS = "{http://www.mediawiki.org/xml/MediaWiki/export-0.11/}"
+# multistream bz2 格式无法用 iterparse 处理，改用逐行读取（与参考实现一致）
 
 SKIP_TITLE_PREFIXES = (
     "Wikipedia:", "维基百科:", "Help:", "帮助:",
@@ -108,45 +106,91 @@ SKIP_TITLE_PREFIXES = (
     "Module:", "模块:", "MediaWiki:", "User:", "用户:",
 )
 
-
-def _is_redirect(text: str) -> bool:
-    t = text.strip().lower()
-    return t.startswith("#redirect") or t.startswith("#重定向")
+# 匹配 <title>...</title>（同一行内）
+_RE_TITLE    = re.compile(r"<title>(.*?)</title>")
+# 匹配 <ns>...</ns>
+_RE_NS       = re.compile(r"<ns>(\d+)</ns>")
+# 匹配 <text ...>content</text>（整段在同一行）
+_RE_TEXT_ONE = re.compile(r"<text[^>]*>(.*?)</text>", re.DOTALL)
+# 匹配多行 <text> 开头
+_RE_TEXT_BGN = re.compile(r"<text[^>]*>(.*)")
 
 
 def iter_wiki_articles(bz2_path: str, max_articles: int | None = None):
-    """流式读取 bz2 XML，只 yield 主命名空间非重定向正文条目。"""
-    count = 0
-    with bz2.open(bz2_path, "rb") as fh:
-        title = ns_key = None
-        text_buf: list[str] = []
-        for event, elem in iterparse(fh, events=("start", "end")):
-            tag = elem.tag
-            if event == "start":
-                if tag == f"{NS}page":
-                    title = ns_key = None
-                    text_buf = []
-            elif event == "end":
-                if tag == f"{NS}title":
-                    title = elem.text or ""
-                elif tag == f"{NS}ns":
-                    ns_key = elem.text or "0"
-                elif tag == f"{NS}text":
-                    if elem.text:
-                        text_buf.append(elem.text)
-                elif tag == f"{NS}page":
-                    if ns_key != "0":
-                        elem.clear(); continue
-                    if any(title.startswith(p) for p in SKIP_TITLE_PREFIXES):
-                        elem.clear(); continue
-                    wikitext = "".join(text_buf)
-                    if _is_redirect(wikitext):
-                        elem.clear(); continue
-                    yield title, wikitext
-                    count += 1
-                    if max_articles and count >= max_articles:
-                        elem.clear(); return
-                elem.clear()
+    """
+    逐行读取 bz2 XML，yield (title, wikitext)。
+    兼容 multistream 格式，只返回主命名空间（ns=0）非重定向条目。
+    """
+    count   = 0
+    title   = None
+    ns_val  = None
+    in_text = False
+    buf: list[str] = []
+
+    with bz2.open(bz2_path, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            # ── 页面开始，重置状态 ──────────────────────────────────────────
+            if "<page>" in line:
+                title  = None
+                ns_val = None
+                in_text = False
+                buf     = []
+                continue
+
+            # ── 标题 ────────────────────────────────────────────────────────
+            if "<title>" in line:
+                m = _RE_TITLE.search(line)
+                if m:
+                    title = m.group(1)
+                continue
+
+            # ── 命名空间 ─────────────────────────────────────────────────────
+            if "<ns>" in line:
+                m = _RE_NS.search(line)
+                if m:
+                    ns_val = m.group(1)
+                continue
+
+            # ── 文本段 ───────────────────────────────────────────────────────
+            if "<text" in line and not in_text:
+                # 情况 A：<text ...>content</text> 同一行
+                m = _RE_TEXT_ONE.search(line)
+                if m:
+                    wikitext = m.group(1)
+                    # 过滤：非主命名空间 / 特殊标题 / 重定向
+                    if (ns_val == "0"
+                            and title
+                            and not any(title.startswith(p) for p in SKIP_TITLE_PREFIXES)
+                            and not wikitext.strip().lower().startswith("#redirect")
+                            and not wikitext.strip().startswith("#重定向")):
+                        yield title, wikitext
+                        count += 1
+                        if max_articles and count >= max_articles:
+                            return
+                else:
+                    # 情况 B：<text ...>开头，内容跨多行
+                    m2 = _RE_TEXT_BGN.search(line)
+                    buf = [m2.group(1)] if m2 else []
+                    in_text = True
+                continue
+
+            if in_text:
+                if "</text>" in line:
+                    buf.append(line[:line.index("</text>")])
+                    wikitext = "".join(buf)
+                    in_text = False
+                    buf = []
+                    if (ns_val == "0"
+                            and title
+                            and not any(title.startswith(p) for p in SKIP_TITLE_PREFIXES)
+                            and not wikitext.strip().lower().startswith("#redirect")
+                            and not wikitext.strip().startswith("#重定向")):
+                        yield title, wikitext
+                        count += 1
+                        if max_articles and count >= max_articles:
+                            return
+                else:
+                    buf.append(line)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -746,4 +790,3 @@ if __name__ == "__main__":
         save_every    = args.save_every,
         do_pack       = args.pack,
     )
-    os.system("/usr/bin/shutdown")

@@ -14,7 +14,7 @@
           <span class="subtitle">Lightweight Transformer Q&A</span>
         </div>
       </div>
-      
+
       <div class="header-right">
         <!-- User Menu -->
         <div class="user-menu">
@@ -82,10 +82,10 @@
         <!-- Messages -->
         <div class="messages-list" v-else>
           <MessageBubble
-            v-for="message in chatStore.messages"
-            :key="message.id"
-            :message="message"
-            @delete="chatStore.removeMessage(message.id)"
+              v-for="message in chatStore.messages"
+              :key="message.id"
+              :message="message"
+              @delete="chatStore.removeMessage(message.id)"
           />
         </div>
       </div>
@@ -95,19 +95,19 @@
         <div class="input-container">
           <div class="input-row">
             <textarea
-              v-model="question"
-              placeholder="Enter your question..."
-              @keydown.enter.exact.prevent="handleSend"
-              :disabled="chatStore.isLoading || !chatStore.isModelReady"
-              rows="1"
-              ref="questionInput"
+                v-model="question"
+                placeholder="Enter your question..."
+                @keydown.enter.exact.prevent="handleSend"
+                :disabled="chatStore.isLoading"
+                rows="1"
+                ref="questionInput"
             ></textarea>
           </div>
           <div class="input-actions">
-            <button 
-              class="btn btn-secondary" 
-              @click="chatStore.clearHistory"
-              :disabled="!chatStore.hasMessages || chatStore.isLoading"
+            <button
+                class="btn btn-secondary"
+                @click="chatStore.clearHistory"
+                :disabled="!chatStore.hasMessages"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3,6 5,6 21,6"/>
@@ -115,19 +115,33 @@
               </svg>
               Clear
             </button>
-            <button 
-              class="btn btn-primary" 
-              @click="handleSend"
-              :disabled="!canSend || chatStore.isLoading"
+            <button
+                class="btn btn-primary"
+                @click="handleSend"
+                :disabled="!canSend || chatStore.isLoading"
             >
-              <svg v-if="!chatStore.isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <!-- 发送图标 -->
+              <svg
+                  v-if="!chatStore.isLoading"
+                  width="16" height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+              >
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22,2 15,22 11,13 2,9"/>
               </svg>
-              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
-                <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
+
+              <!-- loading -->
+              <svg
+                  v-else
+                  width="16" height="16"
+                  viewBox="0 0 24 24"
+                  class="animate-spin"
+              >
+                <circle cx="12" cy="12" r="10"/>
               </svg>
-              {{ chatStore.isLoading ? 'Processing...' : 'Send' }}
             </button>
           </div>
         </div>
@@ -135,7 +149,7 @@
     </main>
 
     <!-- Error Toast -->
-    <div class="error-toast" v-if="chatStore.error" @click="chatStore.error = null">
+    <div class="error-toast" v-if="chatStore.error">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/>
         <line x1="15" y1="9" x2="9" y2="15"/>
@@ -147,10 +161,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useChatStore } from '../stores/chatStore'
-import { useAuthStore } from '../stores/authStore'
+import {ref, computed, onMounted, nextTick, watch} from 'vue'
+import {useRouter} from 'vue-router'
+import {useChatStore} from '../stores/chatStore'
+import {useAuthStore} from '../stores/authStore'
 import MessageBubble from '../components/MessageBubble.vue'
 
 const router = useRouter()
@@ -162,7 +176,6 @@ const question = ref('')
 const context = ref('')
 const chatContainer = ref(null)
 const questionInput = ref(null)
-const contextInput = ref(null)
 
 // Example data
 const examples = [
@@ -178,19 +191,19 @@ const examples = [
 
 // Computed
 const canSend = computed(() => {
-  return question.value.trim() && context.value.trim() && chatStore.isModelReady
+  return question.value.trim()
 })
 
 // Methods
 async function handleSend() {
-  if (!canSend.value || chatStore.isLoading) return
-  
-  await chatStore.sendMessage(question.value, context.value)
-  
+  if (!canSend.value) return
+
+  await chatStore.sendMessage(question.value)
+
   // Clear inputs after sending
   question.value = ''
   context.value = ''
-  
+
   // Scroll to bottom
   await nextTick()
   scrollToBottom()
@@ -218,12 +231,6 @@ watch(() => chatStore.messages.length, () => {
   nextTick(() => {
     scrollToBottom()
   })
-})
-
-// Lifecycle
-onMounted(async () => {
-  await chatStore.checkHealth()
-  await chatStore.fetchModelInfo()
 })
 </script>
 
@@ -484,8 +491,12 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .animate-spin {
@@ -493,7 +504,11 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

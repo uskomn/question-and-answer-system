@@ -20,10 +20,9 @@ export default {
       }
     })
   },
-  qa(question,context){
+  qa(question){
     return apiClient.post('/qa/question_answer',{
-      question,
-      context
+      question
     })
   }
 }
