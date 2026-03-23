@@ -44,7 +44,7 @@ class KnowledgeBase:
         # 本地
         # self.model_name: str = "E:\PycharmProjects\question and answer system\RAG\models/bge-base-zh-v1.5"
         #服务器
-        self.model_name: str = "/home/ubuntu/question-and-answer-system/RAG/models/bge-base-zh-v1.5"
+        self.model_name: str = "/home/ubuntu/question-and-answer-system/RAG/models/bge-small-zh-v1.5"
         self.dim: int               = info["dim"]
         self.query_instruction: str = info.get("query_instruction", "")
 

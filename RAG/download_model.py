@@ -7,8 +7,8 @@ from huggingface_hub import snapshot_download
 import os
 
 # ====== 配置区 ======
-MODEL_NAME = "BAAI/bge-base-zh-v1.5"   # 可改 small / large
-SAVE_DIR = "./models/bge-base-zh-v1.5"  # 本地保存路径
+MODEL_NAME = "BAAI/bge-small-zh-v1.5"   # 可改 small / large
+SAVE_DIR = "./models/bge-small-zh-v1.5"  # 本地保存路径
 
 # ====================
 
