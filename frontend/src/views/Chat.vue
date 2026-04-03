@@ -180,11 +180,11 @@ const questionInput = ref(null)
 // Example data
 const examples = [
   {
-    question: "What is machine learning?",
+    question: "什么是机器学习?",
     context: "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed. It focuses on developing algorithms that can access data and use it to learn patterns and make decisions. Machine learning algorithms build models based on sample data, known as training data, in order to make predictions or decisions."
   },
   {
-    question: "What are the benefits of transformers?",
+    question: "transformers有哪些好处?",
     context: "Transformers have revolutionized natural language processing and other fields. Key benefits include: 1) Parallel processing - unlike RNNs, transformers can process entire sequences simultaneously. 2) Long-range dependencies - attention mechanisms allow modeling of relationships between distant elements. 3) Transfer learning - pre-trained models can be fine-tuned for various tasks. 4) Scalability - transformers handle large datasets effectively. 5) State-of-the-art performance - they achieve best results on many benchmarks."
   }
 ]

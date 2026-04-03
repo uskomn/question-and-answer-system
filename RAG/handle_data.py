@@ -559,7 +559,7 @@ def pack_kb(kb_dir: Path) -> Path:
 def build_knowledge_base(
     input_path: str,
     output_dir: str           = "./kb_data",
-    model_name: str           = "/root/autodl-tmp/bge-base-zh-v1.5",
+    model_name: str           = "/root/autodl-tmp/bge-small-zh-v1.5",
     device: str               = "auto",
     max_articles: int | None  = None,
     chunk_size: int           = 512,
@@ -748,7 +748,7 @@ def parse_args():
                    help="关闭 AMP fp16（默认开启）")
     p.add_argument("--batch-size", type=int, default=256,
                    help="Embedding batch size（0=自动推断）")
-    p.add_argument("--max-articles", type=int, default=None,
+    p.add_argument("--max-articles", type=int, default=50000,
                    help="最多处理文章数（调试用）")
     p.add_argument("--chunk-size", type=int, default=512,
                    help="每块字符数")

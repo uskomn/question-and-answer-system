@@ -13,15 +13,24 @@ def qa():
     data = request.json
 
     question = data.get("question")
-    context = search_from_kg(question)
-    print(context)
+    if not question:
+        return jsonify({"error": "Missing question"}), 400
 
-    if not question or not context:
-        return jsonify({"error": "Missing question or context"}), 400
+    contexts = search_from_kg(question, top_k=3)
+    if not contexts:
+        return jsonify({"error": "No context found"}), 400
 
-    answer = answer_question(question, context[0])
+    answer = answer_question(question, contexts)
+
+    if answer is None:
+        return jsonify({
+            "question": question,
+            "answer": "抱歉，未在知识库中找到相关答案。",
+            "found": False
+        })
 
     return jsonify({
         "question": question,
-        "answer": answer
+        "answer": answer,
+        "found": True
     })

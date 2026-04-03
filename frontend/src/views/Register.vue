@@ -10,9 +10,38 @@
         <h1>LiteQA</h1>
       </div>
 
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }">
+          <span class="step-number">1</span>
+          <span class="step-label">Email</span>
+        </div>
+        <div class="step-line" :class="{ active: currentStep >= 2 }"></div>
+        <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
+          <span class="step-number">2</span>
+          <span class="step-label">Verify</span>
+        </div>
+        <div class="step-line" :class="{ active: currentStep >= 3 }"></div>
+        <div class="step" :class="{ active: currentStep >= 3 }">
+          <span class="step-number">3</span>
+          <span class="step-label">Account</span>
+        </div>
+      </div>
+
       <!-- Title -->
-      <h2>Create Account</h2>
-      <p class="auth-subtitle">Join us and start using the Q&A system</p>
+      <h2 v-if="currentStep === 1">Enter Your Email</h2>
+      <h2 v-else-if="currentStep === 2">Verify Your Email</h2>
+      <h2 v-else>Create Account</h2>
+
+      <p class="auth-subtitle" v-if="currentStep === 1">
+        We'll send a verification code to your email
+      </p>
+      <p class="auth-subtitle" v-else-if="currentStep === 2">
+        Enter the 6-digit code sent to {{ email }}
+      </p>
+      <p class="auth-subtitle" v-else>
+        Choose a username and password
+      </p>
 
       <!-- Error Message -->
       <div v-if="error" class="error-message">
@@ -33,8 +62,81 @@
         {{ successMessage }}
       </div>
 
-      <!-- Register Form -->
-      <form @submit.prevent="handleRegister" class="auth-form">
+      <!-- Step 1: Email Input -->
+      <form v-if="currentStep === 1" @submit.prevent="handleSendCode" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            placeholder="Enter your email"
+            required
+            :disabled="isLoading"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" :disabled="isLoading">
+          <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
+          </svg>
+          {{ isLoading ? 'Sending...' : 'Send Verification Code' }}
+        </button>
+      </form>
+
+      <!-- Step 2: Verification Code -->
+      <form v-else-if="currentStep === 2" @submit.prevent="handleVerifyCode" class="auth-form">
+        <div class="form-group">
+          <label for="code">Verification Code</label>
+          <input
+            id="code"
+            v-model="verificationCode"
+            type="text"
+            placeholder="Enter 6-digit code"
+            required
+            :disabled="isLoading"
+            maxlength="6"
+            class="code-input"
+          />
+          <p class="input-hint">Check your email for the verification code</p>
+        </div>
+
+        <div class="button-group">
+          <button
+            type="button"
+            class="btn btn-secondary btn-block"
+            @click="handleResendCode"
+            :disabled="countdown > 0 || isLoading"
+          >
+            {{ countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code' }}
+          </button>
+
+          <button type="submit" class="btn btn-primary btn-block" :disabled="isLoading || verificationCode.length !== 6">
+            <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20,6 9,17 4,12"/>
+            </svg>
+            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
+            </svg>
+            {{ isLoading ? 'Verifying...' : 'Verify Code' }}
+          </button>
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-block" @click="goBackToStep1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12,19 5,12 12,5"/>
+          </svg>
+          Use a different email
+        </button>
+      </form>
+
+      <!-- Step 3: Account Details -->
+      <form v-else @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
           <label for="username">Username</label>
           <input
@@ -44,19 +146,7 @@
             placeholder="Choose a username"
             required
             :disabled="isLoading"
-            minlength="1"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="Enter your email"
-            required
-            :disabled="isLoading"
+            minlength="2"
           />
         </div>
 
@@ -110,62 +200,169 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+// =========================
 // Form data
-const username = ref('')
+// =========================
+const currentStep = ref(1)
 const email = ref('')
+const verificationCode = ref('')
+const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 
+// =========================
 // State
+// =========================
 const error = ref('')
 const successMessage = ref('')
+const isLoading = computed(() => authStore.isLoading) // ✅ 用 store 的 loading
+const countdown = ref(0)
+let countdownInterval = null
 
+// =========================
 // Computed
-const isLoading = computed(() => authStore.isLoading)
+// =========================
+const canSendCode = computed(() => {
+  return email.value.trim() && email.value.includes('@')
+})
 
-// Methods
-async function handleRegister() {
+// =========================
+// Step 1：发送验证码
+// =========================
+async function handleSendCode() {
   error.value = ''
   successMessage.value = ''
 
-  // Validate passwords match
+  if (!canSendCode.value) {
+    error.value = 'Please enter a valid email address'
+    return
+  }
+
+  try {
+    // ✅ 改为调用 store
+    await authStore.sendCode(email.value)
+
+    successMessage.value = 'Verification code sent! Check your email.'
+    currentStep.value = 2
+    startCountdown()
+
+  } catch (err) {
+    error.value = err.message || 'Failed to send verification code'
+  }
+}
+
+// =========================
+// 重发验证码
+// =========================
+async function handleResendCode() {
+  if (countdown.value > 0) return
+
+  error.value = ''
+  successMessage.value = ''
+
+  try {
+    await authStore.sendCode(email.value)
+    successMessage.value = 'New verification code sent!'
+    startCountdown()
+  } catch (err) {
+    error.value = err.message || 'Failed to resend code'
+  }
+}
+
+// =========================
+// Step 2：验证验证码（前端仅做格式校验）
+// =========================
+async function handleVerifyCode() {
+  error.value = ''
+
+  if (verificationCode.value.length !== 6) {
+    error.value = 'Please enter the complete 6-digit code'
+    return
+  }
+
+  // ❗你的后端是“注册时验证 code”，这里不请求接口
+  successMessage.value = 'Code looks good!'
+  currentStep.value = 3
+  stopCountdown()
+}
+
+// =========================
+// Step 3：注册
+// =========================
+async function handleRegister() {
+  error.value = ''
+
   if (password.value !== confirmPassword.value) {
     error.value = 'Passwords do not match'
     return
   }
 
-  // Validate password length
-  if (password.value.length < 3) {
-    error.value = 'Password must be at least 6 characters'
-    return
-  }
-
-  // Validate username length
-  if (username.value.length < 1) {
-    error.value = 'Username must be at least 3 characters'
-    return
-  }
 
   try {
-    await authStore.register(username.value, email.value, password.value)
-    
-    // Show success and redirect
+    await authStore.register(
+      username.value,
+      email.value,
+      password.value,
+      verificationCode.value
+    )
+
     successMessage.value = 'Account created successfully! Redirecting...'
-    
+
     setTimeout(() => {
       router.push('/')
     }, 1500)
+
   } catch (err) {
     error.value = err.message
   }
 }
+
+// =========================
+// 返回修改邮箱
+// =========================
+function goBackToStep1() {
+  currentStep.value = 1
+  verificationCode.value = ''
+  stopCountdown()
+}
+
+// =========================
+// 倒计时
+// =========================
+function startCountdown() {
+  countdown.value = 60
+  stopCountdown()
+
+  countdownInterval = setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--
+    } else {
+      stopCountdown()
+    }
+  }, 1000)
+}
+
+function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval)
+    countdownInterval = null
+  }
+  countdown.value = 0
+}
+
+// =========================
+// 销毁清理
+// =========================
+onUnmounted(() => {
+  stopCountdown()
+})
 </script>
 
 <style scoped>
@@ -202,6 +399,68 @@ async function handleRegister() {
   margin: 0;
 }
 
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--secondary);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background-color: var(--primary);
+  color: white;
+}
+
+.step.completed .step-number {
+  background-color: var(--success);
+  color: white;
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.step.active .step-label {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background-color: var(--border);
+  margin: 0 0.5rem;
+  margin-bottom: 1.25rem;
+  transition: background-color 0.3s ease;
+}
+
+.step-line.active {
+  background-color: var(--primary);
+}
+
 .auth-card h2 {
   font-size: 1.5rem;
   font-weight: 600;
@@ -214,6 +473,7 @@ async function handleRegister() {
   text-align: center;
   color: var(--text-secondary);
   margin-bottom: 1.5rem;
+  font-size: 0.875rem;
 }
 
 .error-message {
@@ -277,6 +537,25 @@ async function handleRegister() {
 .form-group input:disabled {
   background-color: var(--secondary);
   cursor: not-allowed;
+}
+
+.code-input {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.5rem;
+  font-weight: 600;
+}
+
+.input-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .btn-block {
