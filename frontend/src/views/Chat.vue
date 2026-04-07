@@ -11,7 +11,7 @@
         </div>
         <div class="header-title">
           <h1>LiteQA</h1>
-          <span class="subtitle">Lightweight Transformer Q&A</span>
+          <span class="subtitle">基于transformer的轻量级问答系统</span>
         </div>
       </div>
 
@@ -67,14 +67,14 @@
             </svg>
           </div>
           <h2>Welcome, {{ authStore.username }}!</h2>
-          <p>Ask questions based on the provided context using our lightweight distilled transformer model.</p>
+          <p>通过一个蒸馏的transformer模型对问题进行回答</p>
           <div class="example-questions">
-            <p class="example-label">Try these examples:</p>
+            <p class="example-label">尝试这些例子:</p>
             <button class="example-btn" @click="loadExample(0)">
-              "What is machine learning?"
+              "什么是机器学习?"
             </button>
             <button class="example-btn" @click="loadExample(1)">
-              "What are the benefits of transformers?"
+              "transformers有那些好处?"
             </button>
           </div>
         </div>
@@ -96,7 +96,7 @@
           <div class="input-row">
             <textarea
                 v-model="question"
-                placeholder="Enter your question..."
+                placeholder="输入你的问题..."
                 @keydown.enter.exact.prevent="handleSend"
                 :disabled="chatStore.isLoading"
                 rows="1"
@@ -104,6 +104,10 @@
             ></textarea>
           </div>
           <div class="input-actions">
+            <select v-model="selectedModel" class="model-select">
+              <option value="model_D">model_D</option>
+              <option value="model_E">model_E</option>
+            </select>
             <button
                 class="btn btn-secondary"
                 @click="chatStore.clearHistory"
@@ -176,6 +180,7 @@ const question = ref('')
 const context = ref('')
 const chatContainer = ref(null)
 const questionInput = ref(null)
+const selectedModel=ref('model_D')
 
 // Example data
 const examples = [
@@ -198,7 +203,10 @@ const canSend = computed(() => {
 async function handleSend() {
   if (!canSend.value) return
 
-  await chatStore.sendMessage(question.value)
+  await chatStore.sendMessage({
+    question: question.value,
+    model: selectedModel.value
+  })
 
   // Clear inputs after sending
   question.value = ''
@@ -447,6 +455,16 @@ watch(() => chatStore.messages.length, () => {
 
 .input-row textarea {
   flex: 1;
+}
+
+.model-select {
+  height: 36px;
+  border-radius: 8px;
+  padding: 0 8px;
+  border: 1px solid #ddd;
+  margin-right: 8px;
+  font-size: 13px;
+  background: white;
 }
 
 .input-actions {

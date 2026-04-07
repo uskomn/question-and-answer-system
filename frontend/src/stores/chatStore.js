@@ -27,10 +27,9 @@ export const useChatStore = defineStore('chat', () => {
     // ================= Actions =================
 
     // 发送问题
-    async function sendMessage(question) {
+    async function sendMessage({question, model}) {
 
-        // 参数校验
-        if (!question.trim()) {
+        if (!question?.trim()) {
             error.value = 'Question cannot be empty'
             return null
         }
@@ -40,7 +39,6 @@ export const useChatStore = defineStore('chat', () => {
 
         const now = Date.now()
 
-        // 用户消息
         const userMsg = {
             id: now,
             role: 'user',
@@ -49,7 +47,6 @@ export const useChatStore = defineStore('chat', () => {
         }
         messages.value.push(userMsg)
 
-        // loading 占位
         const loadingId = now + 1
         messages.value.push({
             id: loadingId,
@@ -60,12 +57,10 @@ export const useChatStore = defineStore('chat', () => {
         })
 
         try {
-            const res = await chatApi.qa(question)
+            const res = await chatApi.qa(question, model)
 
-            // 删除 loading
             removeMessage(loadingId)
 
-            // 添加回复
             const botMsg = {
                 id: Date.now(),
                 role: 'bot',
@@ -79,7 +74,6 @@ export const useChatStore = defineStore('chat', () => {
 
         } catch (err) {
 
-            // 删除 loading
             removeMessage(loadingId)
 
             const msg =

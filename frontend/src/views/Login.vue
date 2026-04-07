@@ -11,8 +11,8 @@
       </div>
 
       <!-- Title -->
-      <h2>Welcome Back</h2>
-      <p class="auth-subtitle">Sign in to access the Q&A system</p>
+      <h2>欢迎回来</h2>
+      <p class="auth-subtitle">登录</p>
 
       <!-- Error Message -->
       <div v-if="error" class="error-message">
@@ -27,24 +27,24 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="username">Username</label>
+          <label for="username">用户名</label>
           <input
             id="username"
             v-model="username"
             type="text"
-            placeholder="Enter your username"
+            placeholder="请输入用户名"
             required
             :disabled="isLoading"
           />
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password">密码</label>
           <input
             id="password"
             v-model="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder="请输入密码"
             required
             :disabled="isLoading"
           />
@@ -59,14 +59,14 @@
           <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
             <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
           </svg>
-          {{ isLoading ? 'Signing in...' : 'Sign In' }}
+          {{ isLoading ? '登录中...' : '登录' }}
         </button>
       </form>
 
       <!-- Register Link -->
       <p class="auth-footer">
-        Don't have an account?
-        <router-link to="/register">Create one</router-link>
+        还没有账户?
+        <router-link to="/register">去注册</router-link>
       </p>
     </div>
   </div>

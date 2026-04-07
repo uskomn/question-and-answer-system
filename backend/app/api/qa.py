@@ -13,14 +13,17 @@ def qa():
     data = request.json
 
     question = data.get("question")
+    model_name=data.get("model",'model_D')
     if not question:
         return jsonify({"error": "Missing question"}), 400
 
     contexts = search_from_kg(question, top_k=3)
+    print(f"使用模型{model_name}")
+    print(contexts)
     if not contexts:
         return jsonify({"error": "No context found"}), 400
 
-    answer = answer_question(question, contexts)
+    answer = answer_question(question, contexts, model_name=model_name)
 
     if answer is None:
         return jsonify({
