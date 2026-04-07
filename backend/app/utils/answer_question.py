@@ -2,9 +2,12 @@ import torch
 from transformers import AutoModelForQuestionAnswering,AutoTokenizer
 from .postprocess_answer import postprocess_answers
 
-
-MODEL_PATH_D = r"E:\PycharmProjects\question and answer system\checkpoints\exp_D_logits_attn_kd"
-MODEL_PATH_E = r"E:\PycharmProjects\question and answer system\checkpoints\exp_E_two_stage_distill"
+# 本地
+# MODEL_PATH_D = r"E:\PycharmProjects\question and answer system\checkpoints\exp_D_logits_attn_kd"
+# MODEL_PATH_E = r"E:\PycharmProjects\question and answer system\checkpoints\exp_E_two_stage_distill"
+# 服务器
+MODEL_PATH_D = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_D_logits_attn_kd"
+MODEL_PATH_E = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_E_two_stage_distill"
 
 models = {}
 tokenizers = {}
