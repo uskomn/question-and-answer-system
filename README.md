@@ -195,6 +195,7 @@ npm run build
 MIT License
 
 ## 开发阶段
+服务器数据库密码记得修改.env
 本地服务器文件目录不同
 search_kb.py
 search_from_kg.py
