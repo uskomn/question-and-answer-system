@@ -202,9 +202,10 @@ search_from_kg.py
 后端
 查看进程
 ps aux | grep gunicorn
+砍掉进程
 激活虚拟环境
 source venv/bin/activate
 启动redis服务
 sudo systemctl start redis
 启动后端
-gunicorn -w 2 -b 0.0.0.0:5000 "backend.app:create_app()"
+gunicorn -w 1 -b 0.0.0.0:5000 "backend.app:create_app()"

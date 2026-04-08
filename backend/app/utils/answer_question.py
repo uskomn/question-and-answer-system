@@ -30,7 +30,7 @@ load_model("model_D", MODEL_PATH_D)
 load_model("model_E", MODEL_PATH_E)
 
 
-def answer_question_single(question, context, model, tokenizer, max_length=512):
+def answer_question_single(question, context, model, tokenizer, model_name, max_length=512):
     inputs = tokenizer(
         question,
         context,
@@ -46,25 +46,40 @@ def answer_question_single(question, context, model, tokenizer, max_length=512):
     start_logits = outputs.start_logits
     end_logits = outputs.end_logits
 
-    # 👉 用概率更稳定
     start_probs = torch.softmax(start_logits, dim=-1)
     end_probs = torch.softmax(end_logits, dim=-1)
 
     best_score = 0
     best_span = (0, 0)
 
-    max_answer_len = 40  # 控制答案长度
+    max_answer_len = 40
 
-    for i in range(len(start_probs[0])):
-        for j in range(i, min(i + max_answer_len, len(end_probs[0]))):
-            score = (start_probs[0][i] * end_probs[0][j]).item()
-            if score > best_score:
-                best_score = score
-                best_span = (i, j)
+    seq_len = len(start_probs[0])
+
+    if model_name == "model_E":
+
+        for i in range(1, seq_len):
+            for j in range(i, min(i + max_answer_len, seq_len)):
+                score = (start_probs[0][i] * end_probs[0][j]).item()
+
+                if score > best_score:
+                    best_score = score
+                    best_span = (i, j)
+
+        if best_score < 0.01:
+            return None
+
+    else:
+        for i in range(seq_len):
+            for j in range(i, min(i + max_answer_len, seq_len)):
+                score = (start_probs[0][i] * end_probs[0][j]).item()
+                if score > best_score:
+                    best_score = score
+                    best_span = (i, j)
 
     start_idx, end_idx = best_span
 
-    if end_idx <= start_idx:
+    if end_idx < start_idx:
         return None
 
     answer = tokenizer.convert_tokens_to_string(
@@ -75,8 +90,11 @@ def answer_question_single(question, context, model, tokenizer, max_length=512):
 
     answer = answer.replace(" ", "").strip()
 
-    # 👉 过滤太短答案（很重要）
-    if not answer or len(answer) < 3:
+    # ❗过滤特殊 token（重点）
+    if any(tok in answer for tok in ["[CLS]", "[SEP]", "[PAD]"]):
+        return None
+
+    if not answer:
         return None
 
     return {
@@ -85,14 +103,11 @@ def answer_question_single(question, context, model, tokenizer, max_length=512):
     }
 
 
-# ======================
-# 多段 QA + rerank（核心）
-# ======================
-def answer_question_multi(question, contexts, model, tokenizer, top_k=3):
+def answer_question_multi(question, contexts, model, tokenizer,model_name, top_k=3):
     candidates = []
 
     for ctx in contexts:
-        result = answer_question_single(question, ctx, model, tokenizer)
+        result = answer_question_single(question, ctx, model, tokenizer,model_name)
         if result:
             candidates.append(result)
 
@@ -122,7 +137,10 @@ def answer_question(question: str, contexts: list, model_name="model_D"):
     model = models[model_name]
     tokenizer = tokenizers[model_name]
 
-    result = answer_question_multi(question, contexts, model, tokenizer)
+    result = answer_question_multi(question, contexts, model, tokenizer,model_name)
+    if model_name == "model_E" and result is None:
+        print("model_E失败，自动切换model_D")
+        result = answer_question_multi(question, contexts, models["model_D"], tokenizers["model_D"],"model_D")
     print("处理前")
     print(result['answer'])
     final_answer = postprocess_answers(result["candidates"])
