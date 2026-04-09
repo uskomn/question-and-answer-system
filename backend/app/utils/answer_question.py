@@ -141,7 +141,10 @@ def answer_question(question: str, contexts: list, model_name="model_D"):
     if model_name == "model_E" and result is None:
         print("model_E失败，自动切换model_D")
         result = answer_question_multi(question, contexts, models["model_D"], tokenizers["model_D"],"model_D")
-    if result is None:
+    if result is None or not isinstance(result, dict):
+        return "知识库中暂无切合信息"
+
+    if "answer" not in result:
         return "知识库中暂无切合信息"
     print("处理前")
     print(result['answer'])
