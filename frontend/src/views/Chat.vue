@@ -5,13 +5,13 @@
       <div class="header-left">
         <div class="logo">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="32" height="32" rx="8" fill="#4F46E5"/>
+            <rect width="32" height="32" rx="8" fill="#d97706"/>
             <path d="M8 12h16M8 16h12M8 20h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
         <div class="header-title">
           <h1>LiteQA</h1>
-          <span class="subtitle">基于transformer的轻量级问答系统</span>
+          <span class="subtitle">Lightweight Transformer Q&A</span>
         </div>
       </div>
 
@@ -62,19 +62,19 @@
         <!-- Welcome Screen -->
         <div class="welcome-screen" v-if="!chatStore.hasMessages">
           <div class="welcome-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="1.5">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.5">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
           <h2>Welcome, {{ authStore.username }}!</h2>
-          <p>通过一个蒸馏的transformer模型对问题进行回答</p>
+          <p>Ask questions based on the provided context using our lightweight distilled transformer model.</p>
           <div class="example-questions">
-            <p class="example-label">尝试这些例子:</p>
+            <p class="example-label">try these examples:</p>
             <button class="example-btn" @click="loadExample(0)">
-              "什么是机器学习?"
+              "What is machine learning?"
             </button>
             <button class="example-btn" @click="loadExample(1)">
-              "transformers有那些好处?"
+              "What are the benefits of transformers?"
             </button>
           </div>
         </div>
@@ -96,17 +96,27 @@
           <div class="input-row">
             <textarea
                 v-model="question"
-                placeholder="输入你的问题..."
+                placeholder="Enter your question..."
                 @keydown.enter.exact.prevent="handleSend"
                 :disabled="chatStore.isLoading"
                 rows="1"
                 ref="questionInput"
             ></textarea>
           </div>
+          <div class="input-row">
+            <textarea
+              v-model="context"
+              placeholder="Enter context text for the model to analyze..."
+              @keydown.enter.exact.prevent="handleSend"
+              :disabled="chatStore.isLoading"
+              rows="3"
+              ref="contextInput"
+            ></textarea>
+          </div>
           <div class="input-actions">
             <select v-model="selectedModel" class="model-select">
-              <option value="model_D">model_D</option>
-              <option value="model_E">model_E</option>
+              <option value="model_D">student</option>
+              <option value="model_E">teacher</option>
             </select>
             <button
                 class="btn btn-secondary"
@@ -185,11 +195,11 @@ const selectedModel=ref('model_D')
 // Example data
 const examples = [
   {
-    question: "什么是机器学习?",
+    question: "What is machine learning?",
     context: "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed. It focuses on developing algorithms that can access data and use it to learn patterns and make decisions. Machine learning algorithms build models based on sample data, known as training data, in order to make predictions or decisions."
   },
   {
-    question: "transformers有哪些好处?",
+    question: "What are the benefits of the transformer",
     context: "Transformers have revolutionized natural language processing and other fields. Key benefits include: 1) Parallel processing - unlike RNNs, transformers can process entire sequences simultaneously. 2) Long-range dependencies - attention mechanisms allow modeling of relationships between distant elements. 3) Transfer learning - pre-trained models can be fine-tuned for various tasks. 4) Scalability - transformers handle large datasets effectively. 5) State-of-the-art performance - they achieve best results on many benchmarks."
   }
 ]
@@ -205,7 +215,8 @@ async function handleSend() {
 
   await chatStore.sendMessage({
     question: question.value,
-    model: selectedModel.value
+    model: selectedModel.value,
+    context:context.value
   })
 
   // Clear inputs after sending
@@ -421,7 +432,7 @@ watch(() => chatStore.messages.length, () => {
 .example-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background-color: rgba(79, 70, 229, 0.05);
+  background-color: rgba(217, 119, 6, 0.08);
 }
 
 /* Messages List */
@@ -461,7 +472,7 @@ watch(() => chatStore.messages.length, () => {
   height: 36px;
   border-radius: 8px;
   padding: 0 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   margin-right: 8px;
   font-size: 13px;
   background: white;

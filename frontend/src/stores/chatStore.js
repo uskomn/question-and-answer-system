@@ -27,7 +27,7 @@ export const useChatStore = defineStore('chat', () => {
     // ================= Actions =================
 
     // 发送问题
-    async function sendMessage({question, model}) {
+    async function sendMessage({question, model,context}) {
 
         if (!question?.trim()) {
             error.value = 'Question cannot be empty'
@@ -52,12 +52,13 @@ export const useChatStore = defineStore('chat', () => {
             id: loadingId,
             role: 'bot',
             content: '',
+            context:context,
             isLoading: true,
             timestamp: new Date().toISOString()
         })
 
         try {
-            const res = await chatApi.qa(question, model)
+            const res = await chatApi.qa(question, model,context)
 
             removeMessage(loadingId)
 
@@ -66,6 +67,7 @@ export const useChatStore = defineStore('chat', () => {
                 role: 'bot',
                 content: res?.answer || 'No response',
                 question: res?.question,
+                context: context,
                 timestamp: new Date().toISOString()
             }
 

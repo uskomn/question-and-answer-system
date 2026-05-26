@@ -470,6 +470,55 @@ def load_all_shards(shard_dir: Path) -> np.ndarray | None:
     log.info(f"Merging {len(shards)} vector shards ...")
     return np.vstack([np.load(str(s)) for s in shards])
 
+def build_faiss_index_from_shards(
+        shard_dir: Path,
+        dim: int,
+        use_ivf: bool = False,
+        nlist: int = 4096):
+
+    shard_files = sorted(shard_dir.glob("shard_*.npy"))
+    assert shard_files, "No shards found!"
+
+    log.info(f"Building FAISS index from {len(shard_files)} shards ...")
+
+    # ── 创建 index ─────────────────────────────
+    if use_ivf:
+        quantizer = faiss.IndexFlatIP(dim)
+        index = faiss.IndexIVFFlat(
+            quantizer, dim, nlist, faiss.METRIC_INNER_PRODUCT
+        )
+        index.nprobe = 64
+
+        # 只用前几个 shard 训练
+        train_vecs = []
+        for s in shard_files[:3]:
+            train_vecs.append(np.load(s))
+        train_vecs = np.vstack(train_vecs)
+
+        log.info(f"Training IVF index on {len(train_vecs):,} vectors ...")
+        index.train(train_vecs)
+        del train_vecs
+        gc.collect()
+
+    else:
+        index = faiss.IndexFlatIP(dim)
+
+    # ── 逐 shard add（关键）────────────────────
+    total = 0
+    for i, s in enumerate(shard_files):
+        vecs = np.load(s)   # 只加载一个 shard（~500k）
+
+        index.add(vecs)
+        total += len(vecs)
+
+        log.info(f"  Added shard {i+1}/{len(shard_files)}  total={total:,}")
+
+        del vecs
+        gc.collect()
+
+    log.info(f"FAISS index done  ntotal={index.ntotal:,}")
+    return index
+
 
 def count_encoded_vectors(shard_dir: Path) -> int:
     total = 0
@@ -711,20 +760,13 @@ def build_knowledge_base(
         log.info(f"Encoding complete  total elapsed={time.time()-t_enc:.1f}s")
 
     # ── Step 4: Merge shards → FAISS index ───────────────────────────────────
-    all_vectors = load_all_shards(shard_dir)
-    assert all_vectors is not None and len(all_vectors) == total, \
-        f"Vector count ({len(all_vectors)}) != chunk count ({total}). Delete shards/ and retry."
 
-    log.info(f"Vector matrix shape={all_vectors.shape}  "
-             f"memory={all_vectors.nbytes/1024**3:.2f} GB")
-
-    index = build_faiss_index(
-        all_vectors,
+    index = build_faiss_index_from_shards(
+        shard_dir,
+        dim=encoder.dim,
         use_ivf=use_ivf,
         nlist=nlist,
-        use_faiss_gpu=use_faiss_gpu,
     )
-    del all_vectors
     gc.collect()
 
     # ── Step 5: Persist ───────────────────────────────────────────────────────

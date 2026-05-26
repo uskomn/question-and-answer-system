@@ -4,15 +4,15 @@
       <!-- Logo -->
       <div class="auth-logo">
         <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="8" fill="#4F46E5"/>
+          <rect width="32" height="32" rx="8" fill="#d97706"/>
           <path d="M8 12h16M8 16h12M8 20h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
         </svg>
         <h1>LiteQA</h1>
       </div>
 
       <!-- Title -->
-      <h2>欢迎回来</h2>
-      <p class="auth-subtitle">登录</p>
+      <h2>Welcome Back</h2>
+      <p class="auth-subtitle">Sign in to your account</p>
 
       <!-- Error Message -->
       <div v-if="error" class="error-message">
@@ -27,24 +27,24 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username">Username</label>
           <input
             id="username"
             v-model="username"
             type="text"
-            placeholder="请输入用户名"
+            placeholder="Enter your username"
             required
             :disabled="isLoading"
           />
         </div>
 
         <div class="form-group">
-          <label for="password">密码</label>
+          <label for="password">Password</label>
           <input
             id="password"
             v-model="password"
             type="password"
-            placeholder="请输入密码"
+            placeholder="Enter your password"
             required
             :disabled="isLoading"
           />
@@ -59,14 +59,14 @@
           <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
             <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
           </svg>
-          {{ isLoading ? '登录中...' : '登录' }}
+          {{ isLoading ? 'Signing in...' : 'Sign In' }}
         </button>
       </form>
 
       <!-- Register Link -->
       <p class="auth-footer">
-        还没有账户?
-        <router-link to="/register">去注册</router-link>
+        Don't have an account?
+        <router-link to="/register">Sign up</router-link>
       </p>
     </div>
   </div>
@@ -92,10 +92,10 @@ const error = ref('')
 // Methods
 async function handleLogin() {
   error.value = ''
-  
+
   try {
     await authStore.login(username.value, password.value)
-    
+
     // Redirect to the intended page or chat
     const redirectPath = route.query.redirect || '/'
     router.push(redirectPath)
@@ -111,7 +111,7 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
   padding: 1rem;
 }
 
@@ -195,7 +195,7 @@ async function handleLogin() {
 .form-group input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
 }
 
 .form-group input:disabled {

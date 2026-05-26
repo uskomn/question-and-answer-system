@@ -22,6 +22,21 @@
           <span class="question-text">{{ message.question }}</span>
         </div>
 
+        <!-- Context Display (if bot message and has context) -->
+        <div v-if="message.role === 'bot' && message.context" class="message-context">
+          <div class="context-header">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+            <span>Context</span>
+          </div>
+          <div class="context-content">{{ message.context }}</div>
+        </div>
+
         <!-- Loading State -->
         <div v-if="message.isLoading" class="message-loading">
           <div class="loading-dots">
@@ -201,6 +216,51 @@ function formatTime(timestamp) {
 .question-text {
   color: var(--text-secondary);
   font-size: 0.875rem;
+}
+
+/* Context */
+.message-context {
+  padding: 0.75rem;
+  background-color: rgba(217, 119, 6, 0.06);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+}
+
+.context-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.context-header svg {
+  flex-shrink: 0;
+}
+
+.context-content {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.context-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.context-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.context-content::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 2px;
 }
 
 /* Message Text */

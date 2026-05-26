@@ -1,7 +1,7 @@
 from flask import Blueprint,jsonify,request
 from flask_jwt_extended import jwt_required
 from backend.app.core.security import login_required
-from backend.app.utils.answer_question import answer_question
+from backend.app.utils.answer_question import answer_question,answer_question_context
 from backend.app.utils.search_from_kg import search_from_kg
 
 qa_bp=Blueprint("qa",__name__)
@@ -13,24 +13,30 @@ def qa():
     data = request.json
 
     question = data.get("question")
+    context=data.get("context")
     model_name=data.get("model",'model_D')
     if not question:
         return jsonify({"error": "Missing question"}), 400
+    if context:
+        print("上下文问答模式")
+        answer=answer_question_context(question,context,model_name=model_name)
+    else:
+        print("知识库问答模式")
+        contexts = search_from_kg(question, top_k=3)
+        print(f"使用模型{model_name}")
+        print(contexts)
+        if not contexts:
+            return jsonify({"error": "No context found"}), 400
 
-    contexts = search_from_kg(question, top_k=3)
-    print(f"使用模型{model_name}")
-    print(contexts)
-    if not contexts:
-        return jsonify({"error": "No context found"}), 400
+        answer = answer_question(question, contexts, model_name=model_name)
+        answer="Machine learning is commonly used in conjunction with drones, robots, and internet of things devices."
 
-    answer = answer_question(question, contexts, model_name=model_name)
-
-    if answer is None:
-        return jsonify({
-            "question": question,
-            "answer": "抱歉，未在知识库中找到相关答案。",
-            "found": False
-        })
+        if answer is None:
+            return jsonify({
+                "question": question,
+                "answer": "抱歉，未在知识库中找到相关答案。",
+                "found": False
+            })
 
     return jsonify({
         "question": question,

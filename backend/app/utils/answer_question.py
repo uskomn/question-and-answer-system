@@ -3,11 +3,11 @@ from transformers import AutoModelForQuestionAnswering,AutoTokenizer
 from .postprocess_answer import postprocess_answers
 
 # 本地
-# MODEL_PATH_D = r"E:\PycharmProjects\question and answer system\checkpoints\exp_D_logits_attn_kd"
-# MODEL_PATH_E = r"E:\PycharmProjects\question and answer system\checkpoints\exp_E_two_stage_distill"
+MODEL_PATH_D = r"E:\PycharmProjects\question and answer system\checkpoints\student_distilled"
+MODEL_PATH_E = r"E:\PycharmProjects\question and answer system\checkpoints\teacher_finetuned"
 # 服务器
-MODEL_PATH_D = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_D_logits_attn_kd"
-MODEL_PATH_E = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_E_two_stage_distill"
+# MODEL_PATH_D = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_D_logits_attn_kd"
+# MODEL_PATH_E = r"/home/ubuntu/question-and-answer-system/checkpoints/exp_E_two_stage_distill"
 
 models = {}
 tokenizers = {}
@@ -52,7 +52,7 @@ def answer_question_single(question, context, model, tokenizer, model_name, max_
     best_score = 0
     best_span = (0, 0)
 
-    max_answer_len = 40
+    max_answer_len = 80
 
     seq_len = len(start_probs[0])
 
@@ -88,7 +88,7 @@ def answer_question_single(question, context, model, tokenizer, model_name, max_
         )
     )
 
-    answer = answer.replace(" ", "").strip()
+    answer = answer.strip()
 
     # ❗过滤特殊 token（重点）
     if any(tok in answer for tok in ["[CLS]", "[SEP]", "[PAD]"]):
@@ -110,6 +110,7 @@ def answer_question_multi(question, contexts, model, tokenizer,model_name, top_k
         result = answer_question_single(question, ctx, model, tokenizer,model_name)
         if result:
             candidates.append(result)
+            candidates.append({**result, "context": ctx})
 
     if not candidates:
         return None
@@ -125,7 +126,8 @@ def answer_question_multi(question, contexts, model, tokenizer,model_name, top_k
 
     top_candidates = filtered[:top_k]
 
-    final_answer = "；".join([c["answer"] for c in top_candidates])
+    ctxs = [c.get("context", "") for c in top_candidates]
+    final_answer = postprocess_answers(top_candidates, contexts=ctxs)
 
     return {
         "answer": final_answer,
@@ -148,8 +150,28 @@ def answer_question(question: str, contexts: list, model_name="model_D"):
         return "知识库中暂无切合信息"
     print("处理前")
     print(result['answer'])
-    final_answer = postprocess_answers(result["candidates"])
+    final_answer = postprocess_answers(
+        result["candidates"],
+        contexts=contexts,  # ← 新增，直接传原文列表
+        top_k=1,  # 建议从1开始，答案更干净
+    )
     print("处理后")
     print(final_answer)
 
     return final_answer if result else None
+
+def answer_question_context(question: str, context: str, model_name: str = "model_D") -> str:
+    model = models[model_name]
+    tokenizer = tokenizers[model_name]
+
+    result = answer_question_single(question, context, model, tokenizer, model_name)
+
+    # 修复1：result 为 None 或缺少 answer 字段时统一兜底
+    if not result or "answer" not in result:
+        return "知识库中暂无切合信息"
+
+    # 修复2：复用后处理逻辑（清洗 + 句子扩展）
+    candidate = [{"answer": result["answer"], "score": result["score"]}]
+    final_answer = postprocess_answers(candidate, contexts=[context], top_k=1)
+
+    return final_answer

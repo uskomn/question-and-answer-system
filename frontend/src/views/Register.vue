@@ -4,7 +4,7 @@
       <!-- Logo -->
       <div class="auth-logo">
         <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="8" fill="#4F46E5"/>
+          <rect width="32" height="32" rx="8" fill="#d97706"/>
           <path d="M8 12h16M8 16h12M8 20h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
         </svg>
         <h1>LiteQA</h1>
@@ -14,33 +14,33 @@
       <div class="step-indicator">
         <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }">
           <span class="step-number">1</span>
-          <span class="step-label">邮箱</span>
+          <span class="step-label">Email</span>
         </div>
         <div class="step-line" :class="{ active: currentStep >= 2 }"></div>
         <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }">
           <span class="step-number">2</span>
-          <span class="step-label">验证</span>
+          <span class="step-label">Verify</span>
         </div>
         <div class="step-line" :class="{ active: currentStep >= 3 }"></div>
         <div class="step" :class="{ active: currentStep >= 3 }">
           <span class="step-number">3</span>
-          <span class="step-label">账户</span>
+          <span class="step-label">Account</span>
         </div>
       </div>
 
       <!-- Title -->
-      <h2 v-if="currentStep === 1">输入邮箱地址</h2>
-      <h2 v-else-if="currentStep === 2">验证邮箱地址</h2>
-      <h2 v-else>创建账户</h2>
+      <h2 v-if="currentStep === 1">Enter Your Email</h2>
+      <h2 v-else-if="currentStep === 2">Verify Your Email</h2>
+      <h2 v-else>Create Your Account</h2>
 
       <p class="auth-subtitle" v-if="currentStep === 1">
-        我们会给你的邮箱发送一个验证码
+        We'll send a verification code to your email
       </p>
       <p class="auth-subtitle" v-else-if="currentStep === 2">
-        一个六位的验证码发送给了{{ email }}
+        A 6-digit code has been sent to {{ email }}
       </p>
       <p class="auth-subtitle" v-else>
-        选择一个用户名和密码
+        Choose a username and password
       </p>
 
       <!-- Error Message -->
@@ -65,64 +65,69 @@
       <!-- Step 1: Email Input -->
       <form v-if="currentStep === 1" @submit.prevent="handleSendCode" class="auth-form">
         <div class="form-group">
-          <label for="email">邮箱地址</label>
+          <label for="email">Email Address</label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="输入你的邮箱"
-            required
-            :disabled="isLoading"
+              id="email"
+              v-model="email"
+              type="email"
+              placeholder="Enter your email"
+              required
+              :disabled="isLoading"
           />
         </div>
 
         <button type="submit" class="btn btn-primary btn-block" :disabled="isLoading">
-          <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2">
             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
             <polyline points="22,6 12,13 2,6"/>
           </svg>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               class="animate-spin">
             <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
           </svg>
-          {{ isLoading ? '发送中...' : '获取验证码' }}
+          {{ isLoading ? 'Sending...' : 'Get Verification Code' }}
         </button>
       </form>
 
       <!-- Step 2: Verification Code -->
       <form v-else-if="currentStep === 2" @submit.prevent="handleVerifyCode" class="auth-form">
         <div class="form-group">
-          <label for="code">验证码</label>
+          <label for="code">Verification Code</label>
           <input
-            id="code"
-            v-model="verificationCode"
-            type="text"
-            placeholder="输入六位的验证码"
-            required
-            :disabled="isLoading"
-            maxlength="6"
-            class="code-input"
+              id="code"
+              v-model="verificationCode"
+              type="text"
+              placeholder="Enter 6-digit code"
+              required
+              :disabled="isLoading"
+              maxlength="6"
+              class="code-input"
           />
-          <p class="input-hint">检查你的邮件来获取验证码</p>
+          <p class="input-hint">Check your email for the verification code</p>
         </div>
 
         <div class="button-group">
           <button
-            type="button"
-            class="btn btn-secondary btn-block"
-            @click="handleResendCode"
-            :disabled="countdown > 0 || isLoading"
+              type="button"
+              class="btn btn-secondary btn-block"
+              @click="handleResendCode"
+              :disabled="countdown > 0 || isLoading"
           >
-            {{ countdown > 0 ? `Resend in ${countdown}s` : '重新发送' }}
+            {{ countdown > 0 ? `Resend in ${countdown}s` : 'Resend Code' }}
           </button>
 
-          <button type="submit" class="btn btn-primary btn-block" :disabled="isLoading || verificationCode.length !== 6">
-            <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button type="submit" class="btn btn-primary btn-block"
+                  :disabled="isLoading || verificationCode.length !== 6">
+            <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2">
               <polyline points="20,6 9,17 4,12"/>
             </svg>
-            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 class="animate-spin">
               <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
             </svg>
-            {{ isLoading ? 'Verifying...' : '验证' }}
+            {{ isLoading ? 'Verifying...' : 'Verify' }}
           </button>
         </div>
 
@@ -131,78 +136,80 @@
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12,19 5,12 12,5"/>
           </svg>
-          换一个邮箱
+          Use a Different Email
         </button>
       </form>
 
       <!-- Step 3: Account Details -->
       <form v-else @submit.prevent="handleRegister" class="auth-form">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username">Username</label>
           <input
-            id="username"
-            v-model="username"
-            type="text"
-            placeholder="选择一个用户名"
-            required
-            :disabled="isLoading"
-            minlength="2"
+              id="username"
+              v-model="username"
+              type="text"
+              placeholder="Choose a username"
+              required
+              :disabled="isLoading"
+              minlength="2"
           />
         </div>
 
         <div class="form-group">
-          <label for="password">密码</label>
+          <label for="password">Password</label>
           <input
-            id="password"
-            v-model="password"
-            type="password"
-            placeholder="输入密码"
-            required
-            :disabled="isLoading"
-            minlength="3"
+              id="password"
+              v-model="password"
+              type="password"
+              placeholder="Enter your password"
+              required
+              :disabled="isLoading"
+              minlength="3"
           />
         </div>
 
         <div class="form-group">
-          <label for="confirmPassword">验证密码</label>
+          <label for="confirmPassword">Confirm Password</label>
           <input
-            id="confirmPassword"
-            v-model="confirmPassword"
-            type="password"
-            placeholder="验证你的密码"
-            required
-            :disabled="isLoading"
-            minlength="3"
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              required
+              :disabled="isLoading"
+              minlength="3"
           />
         </div>
 
         <button type="submit" class="btn btn-primary btn-block" :disabled="isLoading">
-          <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg v-if="!isLoading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2">
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
             <circle cx="8.5" cy="7" r="4"/>
             <line x1="20" y1="8" x2="20" y2="14"/>
             <line x1="23" y1="11" x2="17" y2="11"/>
           </svg>
-          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               class="animate-spin">
             <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
           </svg>
-          {{ isLoading ? '创建账户中...' : '创建账户' }}
+          {{ isLoading ? 'Creating Account...' : 'Create Account' }}
         </button>
       </form>
 
       <!-- Login Link -->
       <p class="auth-footer">
-        已经有一个账户?
-        <router-link to="/login">登录</router-link>
+        Already have an account?
+        <router-link to="/login">Sign in</router-link>
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
+import {ref, computed, onUnmounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {useAuthStore} from '../stores/authStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -222,7 +229,7 @@ const confirmPassword = ref('')
 // =========================
 const error = ref('')
 const successMessage = ref('')
-const isLoading = computed(() => authStore.isLoading) // ✅ 用 store 的 loading
+const isLoading = computed(() => authStore.isLoading)
 const countdown = ref(0)
 let countdownInterval = null
 
@@ -234,7 +241,7 @@ const canSendCode = computed(() => {
 })
 
 // =========================
-// Step 1：发送验证码
+// Step 1: Send verification code
 // =========================
 async function handleSendCode() {
   error.value = ''
@@ -246,7 +253,6 @@ async function handleSendCode() {
   }
 
   try {
-    // ✅ 改为调用 store
     await authStore.sendCode(email.value)
 
     successMessage.value = 'Verification code sent! Check your email.'
@@ -259,7 +265,7 @@ async function handleSendCode() {
 }
 
 // =========================
-// 重发验证码
+// Resend verification code
 // =========================
 async function handleResendCode() {
   if (countdown.value > 0) return
@@ -277,7 +283,7 @@ async function handleResendCode() {
 }
 
 // =========================
-// Step 2：验证验证码（前端仅做格式校验）
+// Step 2: Verify code (frontend format validation only)
 // =========================
 async function handleVerifyCode() {
   error.value = ''
@@ -287,14 +293,13 @@ async function handleVerifyCode() {
     return
   }
 
-  // ❗你的后端是“注册时验证 code”，这里不请求接口
   successMessage.value = 'Code looks good!'
   currentStep.value = 3
   stopCountdown()
 }
 
 // =========================
-// Step 3：注册
+// Step 3: Register
 // =========================
 async function handleRegister() {
   error.value = ''
@@ -304,13 +309,12 @@ async function handleRegister() {
     return
   }
 
-
   try {
     await authStore.register(
-      username.value,
-      email.value,
-      password.value,
-      verificationCode.value
+        username.value,
+        email.value,
+        password.value,
+        verificationCode.value
     )
 
     successMessage.value = 'Account created successfully! Redirecting...'
@@ -325,7 +329,7 @@ async function handleRegister() {
 }
 
 // =========================
-// 返回修改邮箱
+// Go back to change email
 // =========================
 function goBackToStep1() {
   currentStep.value = 1
@@ -334,7 +338,7 @@ function goBackToStep1() {
 }
 
 // =========================
-// 倒计时
+// Countdown timer
 // =========================
 function startCountdown() {
   countdown.value = 60
@@ -358,7 +362,7 @@ function stopCountdown() {
 }
 
 // =========================
-// 销毁清理
+// Cleanup on unmount
 // =========================
 onUnmounted(() => {
   stopCountdown()
@@ -371,7 +375,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
   padding: 1rem;
 }
 
@@ -531,7 +535,7 @@ onUnmounted(() => {
 .form-group input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
 }
 
 .form-group input:disabled {
