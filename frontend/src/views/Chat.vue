@@ -5,7 +5,7 @@
       <div class="header-left">
         <div class="logo">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="32" height="32" rx="8" fill="#d97706"/>
+            <rect width="32" height="32" rx="8" fill="#60a5fa"/>
             <path d="M8 12h16M8 16h12M8 20h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>

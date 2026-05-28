@@ -4,7 +4,7 @@
       <!-- Logo -->
       <div class="auth-logo">
         <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="8" fill="#d97706"/>
+          <rect width="32" height="32" rx="8" fill="#60a5fa"/>
           <path d="M8 12h16M8 16h12M8 20h14" stroke="white" stroke-width="2" stroke-linecap="round"/>
         </svg>
         <h1>LiteQA</h1>
@@ -375,7 +375,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
   padding: 1rem;
 }
 
@@ -385,7 +385,8 @@ onUnmounted(() => {
   padding: 2.5rem;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
 .auth-logo {
@@ -422,8 +423,8 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--secondary);
-  color: var(--text-muted);
+  background-color: #f3f4f6;
+  color: #6b7280;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -433,13 +434,13 @@ onUnmounted(() => {
 }
 
 .step.active .step-number {
-  background-color: var(--primary);
-  color: white;
+  background-color: #f3f4f6;
+  color: #1c1917;
 }
 
 .step.completed .step-number {
-  background-color: var(--success);
-  color: white;
+  background-color: #f3f4f6;
+  color: #1c1917;
 }
 
 .step-label {
@@ -448,7 +449,7 @@ onUnmounted(() => {
 }
 
 .step.active .step-label {
-  color: var(--primary);
+  color: #1c1917;
   font-weight: 500;
 }
 
@@ -462,7 +463,7 @@ onUnmounted(() => {
 }
 
 .step-line.active {
-  background-color: var(--primary);
+  background-color: #1c1917;
 }
 
 .auth-card h2 {
@@ -568,6 +569,15 @@ onUnmounted(() => {
   font-size: 1rem;
   font-weight: 500;
   margin-top: 0.5rem;
+}
+
+.btn-block.btn-primary {
+  background-color: #1c1917;
+  color: white;
+}
+
+.btn-block.btn-primary:hover:not(:disabled) {
+  background-color: #44403c;
 }
 
 .auth-footer {
