@@ -32,9 +32,20 @@
               <line x1="16" y1="17" x2="8" y2="17"/>
               <polyline points="10,9 9,9 8,9"/>
             </svg>
-            <span>Context</span>
+            <span>{{ Array.isArray(message.context) ? 'Sources (' + message.context.length + ')' : 'Context' }}</span>
           </div>
-          <div class="context-content">{{ message.context }}</div>
+          <!-- Array context (KB mode) -->
+          <template v-if="Array.isArray(message.context)">
+            <div v-for="(item, idx) in message.context" :key="idx" class="context-item">
+              <div class="context-item-header">
+                <span class="context-item-title">{{ item.title || 'Source ' + (idx + 1) }}</span>
+                <span v-if="item.score" class="context-item-score">{{ (item.score * 100).toFixed(1) }}%</span>
+              </div>
+              <div class="context-content">{{ item.text }}</div>
+            </div>
+          </template>
+          <!-- String context (user-provided mode) -->
+          <div v-else class="context-content">{{ message.context }}</div>
         </div>
 
         <!-- Loading State -->
@@ -248,6 +259,37 @@ function formatTime(timestamp) {
   max-height: 120px;
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+.context-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.1);
+}
+
+.context-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.context-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.context-item-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+.context-item-score {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  background: rgba(217, 119, 6, 0.08);
+  padding: 1px 6px;
+  border-radius: 8px;
 }
 
 .context-content::-webkit-scrollbar {

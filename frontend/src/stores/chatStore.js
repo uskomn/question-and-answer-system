@@ -67,7 +67,7 @@ export const useChatStore = defineStore('chat', () => {
                 role: 'bot',
                 content: res?.answer || 'No response',
                 question: res?.question,
-                context: context,
+                context: res?.contexts || context,
                 timestamp: new Date().toISOString()
             }
 
